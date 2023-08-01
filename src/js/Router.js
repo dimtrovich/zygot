@@ -1,6 +1,7 @@
 import { in_array } from "php-in-js/modules/array";
 import { ltrim, rtrim, strpos, str_replace, substr_replace, strlen, trim } from "php-in-js/modules/string";
 import { empty, is_array, is_object } from "php-in-js/modules/types";
+import { http_build_query, parse_url, urlencode } from "php-in-js/modules/url";
 
 /**
  * Une collection de routes BlitzPHP. Cette classe constitue l'API principale de Zygot.
@@ -11,8 +12,8 @@ export default class Router {
     /**
      * @param {Boolean} [absolute] - S'il faut inclure le chemin absolue a l'URL.
      */
-    constructor(absolute = true) {
-        this._config = typeof Zygot !== 'undefined' ? Zygot : globalThis?.Zygot;
+    constructor(absolute = true, config) {
+        this._config = config || (typeof Zygot !== 'undefined' ? Zygot : globalThis?.Zygot);
         this._config = { ...this._config, absolute };
 		this._routes = this._config.routes;
     }
@@ -89,27 +90,55 @@ export default class Router {
 		search = params.shift();
 		params = params.shift();
 
-		if (!params) {
+		if (in_array(params, [null, undefined, 'undefined', 'null', ''], true)) {
 			params = []
 		}
 
-		let url = '';
-		if (this.has(search)) {
-			url = this._buildReverseRoute(this._routes[search], params);
+		if (!this.has(search)) {
+			if (this._config.defaults.throwOnUnavailable) {
+				throw new Error(`Zygot error: route '${search}' is not in the route list.`)
+			}
+
+			return trim(this._config.url, '/')
+		}
+		
+		let url = this._buildReverseRoute(this._routes[search], params);
+		
+		if (! this._config.absolute) {
+			return rtrim(url, '/');
+		}
+		
+		const parts  = parse_url(this._config.url);
+		
+		if (url.includes(parts.host)) {
+			url =  `${parts.scheme}://` + ltrim(url.replace(`${parts.scheme}://`, ''), '/')
+		} else {
+			url = this._config.url + url
 		}
 
-        return this._config.absolute ? rtrim(this._config.url, '/') + url : url;
+		const parts2 = parse_url(url)
+		const port   = (parts2.port || parts.port) || (this._config.port || 80)
+
+		const uri = {
+			scheme: parts2.scheme || parts.scheme,
+			host: parts2.host || parts.host,
+			port: port == 80 ? '' : ':' + port,
+			path: parts2.path || parts.path,
+			query: parts2.query || parts.query
+		}
+		
+		return trim(`${uri.scheme}://${uri.host}${uri.port}${uri.path}${uri.query ? '?' + uri.query : ''}`, '/')
 	}
 
 	_buildReverseRoute(route, params) {
-		if (!empty(params) && !is_array(params)) {
+		if (!in_array(params, [null, undefined, 'undefined', 'null', ''], true) && !is_array(params)) {
 			params = [params];
 		}
 		if (params.length && is_object(params[0])) {
 			params = params[0];
 		}
 		
-		let from = route.uri;
+		let from = trim(route.domain || '', '/') + '/' + trim(route.uri, '/');
 		
 		if (from.includes('{locale}')) {
 			let locale = null;
@@ -128,18 +157,25 @@ export default class Router {
 			matches.forEach((match, index) => {
 				let paramKey = str_replace(['{', '}', '?'], '', match);
 				if (!params[paramKey]) {
-					if (params[index]) {
+					if (!in_array(params[index], [null, undefined, 'undefined', 'null', ''], true)) {
 						paramKey = index
-					} else if (params['id']) {
+					} else if (params['id'] && !matches.includes('{id}')) {
 						paramKey = 'id'
 					}
 				}
 
-				if (!match.endsWith('?}') && empty(params[paramKey])) {
+				if (!match.endsWith('?}') && params[paramKey] !== 0 && empty(params[paramKey])) {
 					throw new Error(`'${paramKey}' parameter is required`);
 				}
-				from = str_replace(match, params[paramKey], from);
+				const paramValue = in_array(params[paramKey], [null, undefined, 'undefined', 'null'], true) ? '' : params[paramKey]
+
+				from = str_replace(match, urlencode(paramValue), from);
+				delete params[paramKey];
 			});
+		}
+
+		if (is_object(params) && Object.keys(params).length) {
+			from += '?' + http_build_query(params)
 		}
 
 		matches = from.match(new RegExp(/\([^)]+\)/));
@@ -187,8 +223,8 @@ export default class Router {
      * @return {Object|false} - Si cette route correspond, renvoie les paramètres correspondants.
      */
     _matchesUrl(route, uri) {
-        if (!route.methods.includes('GET')) return false;
-
+		if (!route.methods.includes('GET')) return false;
+		
 		uri = trim(uri, '/')
 
         let path = route.uri.replace(/:([\w]+)/, (match) => {
@@ -225,6 +261,7 @@ export default class Router {
         }
 
         let matchedParams = {};
+		
         const [name, route] = Object.entries(this._routes).find(
           ([name, route]) => (matchedParams = this._matchesUrl(route, url))
         ) || [undefined, undefined];

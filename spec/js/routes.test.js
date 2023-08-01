@@ -14,7 +14,10 @@ const defaultWindow = {
 const defaultZygot = {
     url: 'https://zygot.dev',
     port: null,
-    defaults: { locale: 'en' },
+    defaults: { 
+		locale: 'en', 
+		throwOnUnavailable: true
+	},
     routes: {
         home: {
             uri: '/',
@@ -292,6 +295,130 @@ describe('route()', () => {
         same(route('translatePosts.show', [1]), 'https://zygot.dev/en/posts/1');
         // route with both required and default parameters
         same(route('translateEvents.venues.show', [1, 2]), 'https://zygot.dev/en/events/1/venues/2');
+    });
+
+	test('can generate a URL for a route with domain parameters', () => {
+        // route with required domain parameters
+        same(route('team.user.show', { team: 'dimtrovich', id: 1 }), 'https://dimtrovich.zygot.dev/users/1');
+        // route with required domain parameters and default parameters
+        same(route('translateTeam.user.show', { team: 'dimtrovich', id: 1 }), 'https://dimtrovich.zygot.dev/en/users/1');
+    });
+
+	test('can return base URL if path is "/"', () => {
+        same(route('home'), 'https://zygot.dev');
+    });
+
+	test('can ignore an optional parameter', () => {
+        same(route('optional', { id: 123 }), 'https://zygot.dev/optional/123');
+        same(route('optional', { id: 123, slug: 'news' }), 'https://zygot.dev/optional/123/news');
+        same(route('optional', { id: 123, slug: null }), 'https://zygot.dev/optional/123');
+    });
+
+	test('can ignore a single optional parameter', () => {
+        same(route('pages.optional'), 'https://zygot.dev/optionalpage');
+        same(route('pages.optional', {}), 'https://zygot.dev/optionalpage');
+        same(route('pages.optional', undefined), 'https://zygot.dev/optionalpage');
+        same(route('pages.optional', null), 'https://zygot.dev/optionalpage');
+    });
+
+	test('missing optional parameter in first path segment', () => {
+        same(route('products.show', { country: 'ca', language: 'fr', id: 1 }), 'https://zygot.dev/ca/fr/products/1');
+        // These URLs aren't valid but this matches the behavior of Laravel's PHP `route()` helper
+        same(route('products.show', { country: 'ca', id: 1 }), 'https://zygot.dev/ca//products/1');
+        // First param is handled correctly
+        same(route('products.show', { language: 'fr', id: 1 }), 'https://zygot.dev/fr/products/1');
+    });
+
+	test('can error if a route name doesn’t exist', () => {
+        throws(() => route('unknown-route'), /Zygot error: route 'unknown-route' is not in the route list\./);
+    });
+
+	test('return base url if a route name doesn’t exist', () => {
+		global.Zygot.defaults.throwOnUnavailable = false;
+        
+		same(route('unknown-route'), 'https://zygot.dev');
+    });
+
+	test('can automatically append extra parameter values as a query string', () => {
+        same(
+            route('events.venues.show', {
+                event: 1,
+                venue: 2,
+                search: 'rogers',
+                page: 2,
+            }),
+            'https://zygot.dev/events/1/venues/2?search=rogers&page=2'
+        );
+		same(
+            route('events.venues.show', {
+                id: 2,
+                event: 1,
+                venue: 2,
+                search: 'rogers',
+            }),
+            'https://zygot.dev/events/1/venues/2?id=2&search=rogers'
+        );
+        // ignore values explicitly set to `null`
+        same(route('posts.index', { filled: 'filling', empty: null }), 'https://zygot.dev/posts?filled=filling');
+    });
+
+	test('can cast boolean query parameters to integers', () => {
+        same(route('posts.show', { post: 1, preview: true }), 'https://zygot.dev/posts/1?preview=1');
+    });
+	
+	test('can generate a URL with a port', () => {
+        global.Zygot.url = 'https://zygot.dev:81';
+        global.Zygot.port = 81;
+
+        // route with no parameters
+        same(route('posts.index'), 'https://zygot.dev:81/posts');
+        // route with required domain parameters
+        same(route('team.user.show', { team: 'dimtrovich', id: 1 }), 'https://dimtrovich.zygot.dev:81/users/1');
+    });
+
+	test('can handle trailing path segments in the base URL', () => {
+        global.Zygot.url = 'https://test.thing/ab/cd';
+
+        same(route('events.venues.index', 1), 'https://test.thing/ab/cd/events/1/venues');
+    });
+
+	test('can URL-encode named parameters', () => {
+        global.Zygot.url = 'https://test.thing/ab/cd';
+
+        same(
+            route('events.venues.index', { event: 'Fun&Games' }),
+            'https://test.thing/ab/cd/events/Fun%26Games/venues'
+        );
+        same(
+            route('events.venues.index', {
+                event: 'Fun&Games',
+                location: 'Blues&Clues',
+            }),
+            'https://test.thing/ab/cd/events/Fun%26Games/venues?location=Blues%26Clues'
+        );
+    });
+
+	test('can handle a parameter explicity set to `0`', () => {
+        same(route('posts.update', 0), 'https://zygot.dev/posts/0');
+    });
+
+	test('can accept a custom Zygot configuration object', () => {
+        const config = {
+            url: 'http://notYourAverage.dev',
+            port: null,
+            defaults: { locale: 'en' },
+            routes: {
+                'dimtrovichDev.packages.index': {
+                    uri: 'dimtrovichDev/{dev}/packages',
+                    methods: ['GET', 'HEAD'],
+                },
+            },
+        };
+
+        same(
+            route('dimtrovichDev.packages.index', { dev: 1 }, true, config),
+            'http://notYourAverage.dev/dimtrovichDev/1/packages'
+        );
     });
 });
 
