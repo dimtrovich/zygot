@@ -1,0 +1,52 @@
+{
+    "name": "dimtrovich/zygot",
+    "description": "Exporte toutes vos routes nommées BlitzPHP et fournit une fonction route() en JavaScript. Inspiré de tightenco/ziggy",
+    "keywords": ["blitz php", "routes", "javascript", "zygot"],
+    "homepage": "https://github.com/dimtrovich/zygot",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Dimtrovich\\Zygot\\": "src/"
+        },
+		"files": [
+			"src/helpers.php"
+		]
+    },
+    "support": {
+        "issues": "https://github.com/dimtrovich/zygot/issues",
+        "source": "https://github.com/dimtrovich/zygot"
+    },
+    "authors": [
+        {
+            "name": "Dimitri Sitchet Tomkeu",
+            "email": "devcode.dst@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {
+        "php": ">=8.0",
+        "ext-json": "*",
+        "blitz-php/framework": "^0.4"
+    },
+    "require-dev": {
+        "blitz-php/coding-standard": "^1.1",
+        "phpstan/phpstan": "^1.4.7"
+    },
+    "scripts": {
+        "analyze": "phpstan analyse",
+        "cs": "php-cs-fixer fix --ansi --verbose --dry-run --diff",
+        "cs-fix": "php-cs-fixer fix --ansi --verbose --diff"
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.x-dev"
+        }
+    },
+    "prefer-stable": true,
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true
+    }   
+}
