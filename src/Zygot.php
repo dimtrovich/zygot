@@ -135,8 +135,9 @@ class Zygot implements JsonSerializable
             'port'     => parse_url($this->url)['port'] ?? null,
             'routes'   => $this->applyFilters($this->group)->toArray(),
             'defaults' => [
-                'locale'           => config('app.locale'),
-                'supportedLocales' => config('app.supported_locales'),
+				'locale'             => config('app.language'),
+				'supportedLocales'   => config('app.supported_locales'),
+				'throwOnUnavailable' => config('zygot.throw-on-unavailable', false),
             ],
         ];
     }
