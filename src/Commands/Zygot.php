@@ -39,9 +39,15 @@ class Zygot extends Command
      * @var array Options
      */
     protected $options = [
-        '--php'   => ['Chemin d\'accès au fichier JavaScript généré.', 'resources/js/zygot.js'],
         '--url'   => '',
         '--group' => '',
+    ];
+
+	/**
+	 * @var array Arguments
+	 */
+    protected $arguments = [
+        'path'  => ['Chemin d\'accès au fichier JavaScript généré.', 'resources/js/zygot.js'],
     ];
 
     /**
