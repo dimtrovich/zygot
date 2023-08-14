@@ -1,6 +1,6 @@
 import { in_array } from "php-in-js/modules/array";
 import { ltrim, rtrim, strpos, str_replace, substr_replace, strlen, trim } from "php-in-js/modules/string";
-import { empty, is_array, is_object } from "php-in-js/modules/types";
+import { empty, is_array, is_object, is_string } from "php-in-js/modules/types";
 import { http_build_query, parse_url, urlencode } from "php-in-js/modules/url";
 
 /**
@@ -72,7 +72,7 @@ export default class Router {
      * @return {Boolean}
      */
     has(name) {
-        return Object.keys(this._routes).includes(name);
+        return Object.keys(this._routes).includes(this._nameOfRoute(name));
     }
 
 	/**
@@ -88,6 +88,7 @@ export default class Router {
 		params = [...arguments];
 
 		search = params.shift();
+		search = this._nameOfRoute(search);
 		params = params.shift();
 
 		if (in_array(params, [null, undefined, 'undefined', 'null', ''], true)) {
@@ -213,6 +214,26 @@ export default class Router {
         }
 
         return str_replace('{locale}', locale, url);
+	}
+
+
+	/**
+	 * Donne le nom d'une route avec le parametre "routeNamePrefix" passé dans la configuration
+	 * 
+	 * @param {String} name 
+	 * 
+	 * @return {String}
+	 */
+	_nameOfRoute(name) {
+		const prefix = this._config.defaults.routeNamePrefix || null;
+
+		if (!prefix || !is_string(prefix)) {
+			return name;
+		}
+
+		name = name.replace(RegExp(`^${prefix}`, 'i'), '');
+
+		return prefix + name;
 	}
 
 	/**

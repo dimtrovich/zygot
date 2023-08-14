@@ -420,6 +420,21 @@ describe('route()', () => {
             'http://notYourAverage.dev/dimtrovichDev/1/packages'
         );
     });
+
+	test('can use global route prefix name', () => {
+		global.Zygot.defaults.routeNamePrefix = 'posts.';
+        
+        same(route('show', { post: 1, preview: true }), 'https://zygot.dev/posts/1?preview=1');
+        same(route('show', [1]), 'https://zygot.dev/posts/1');
+        same(route('show', { id: 1 }), 'https://zygot.dev/posts/1');
+        same(route('show', 'my-first-post'), 'https://zygot.dev/posts/my-first-post');
+        same(route('show', 1), 'https://zygot.dev/posts/1');
+		same(route('index', [], false), '/posts');
+		same(route('index'), 'https://zygot.dev/posts');
+		same(route('index', [12]), 'https://zygot.dev/posts');
+
+		global.Zygot.defaults.routeNamePrefix = '';
+    });
 });
 
 describe('has()', () => {
