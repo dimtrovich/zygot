@@ -201,6 +201,38 @@ const defaultZygot = {
                 slug: '.*',
             },
         },
+        'regex.any': {
+            uri: 'regex/(.*)',
+            methods: ['GET', 'HEAD'],
+        },
+        'regex.segment': {
+            uri: 'regex/([^/]+)',
+            methods: ['GET', 'HEAD'],
+        },
+        'regex.alphanum': {
+            uri: 'regex/([a-zA-Z0-9]+)',
+            methods: ['GET', 'HEAD'],
+        },
+        'regex.num': {
+            uri: 'regex/([0-9]+)',
+            methods: ['GET', 'HEAD'],
+        },
+        'regex.alpha': {
+            uri: 'regex/([a-zA-Z]+)',
+            methods: ['GET', 'HEAD'],
+        },
+        'regex.hash': {
+            uri: 'regex/([^/]+)',
+            methods: ['GET', 'HEAD'],
+        },
+        'regex.slug': {
+            uri: 'regex/([a-z0-9-]+)',
+            methods: ['GET', 'HEAD'],
+        },
+        'regex.many': {
+            uri: 'regex/([a-zA-Z]+)/([0-9]+)/([^/]+)',
+            methods: ['GET', 'HEAD'],
+        },
     },
 };
 
@@ -434,6 +466,24 @@ describe('route()', () => {
 		same(route('index', [12]), 'https://zygot.dev/posts');
 
 		global.Zygot.defaults.routeNamePrefix = '';
+    });
+
+	test('can use regex', () => {
+        same(route('regex.any', [1]), 'https://zygot.dev/regex/1');
+        same(route('regex.segment', [1]), 'https://zygot.dev/regex/1');
+        same(route('regex.alphanum', ['abc123']), 'https://zygot.dev/regex/abc123');
+        
+		same(route('regex.num', ['123']), 'https://zygot.dev/regex/123');
+        same(route('regex.num', 123), 'https://zygot.dev/regex/123');
+        same(route('regex.num', [123]), 'https://zygot.dev/regex/123');
+        
+		same(route('regex.alpha', ['abc']), 'https://zygot.dev/regex/abc');
+		same(route('regex.alpha', 'abc'), 'https://zygot.dev/regex/abc');
+		// throws(() => route('regex.alpha', '123'), /Zygot error: Invalid parameter type: '123'\./);
+		
+		same(route('regex.hash', 'abc'), 'https://zygot.dev/regex/abc');
+		same(route('regex.slug', 'article-123'), 'https://zygot.dev/regex/article-123');
+		//same(route('regex.many', ['article', 123, 'abc']), 'https://zygot.dev/regex/article/123/abc');
     });
 });
 

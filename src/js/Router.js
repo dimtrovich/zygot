@@ -184,13 +184,14 @@ export default class Router {
         if (matches) {
 			// Construisez notre chaîne résultante, en insérant les $params aux endroits appropriés.
 			matches.forEach((pattern, index) => {
-				if (! params[index].match(new RegExp(`^${pattern}$`, 'g'))) {
-					throw new Error("Invalid parameter type: " + params[index])
+				const param = String(params[index]);
+				if (! param.match(new RegExp(`^${pattern}$`, 'g'))) {
+					throw new Error(`Zygot error: Invalid parameter type: '${param}.`)
 				}
 
 				// Assurez-vous que le paramètre que nous insérons correspond au type de paramètre attendu.
 				const pos  = strpos(from, pattern);
-				from = substr_replace(from, params[index], pos, strlen(pattern));
+				from = substr_replace(from, param, pos, strlen(pattern));
 			})
         }
 
