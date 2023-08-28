@@ -12,6 +12,7 @@
 namespace Dimtrovich\Zygot;
 
 use BlitzPHP\Container\Services;
+use BlitzPHP\Router\DefinedRouteCollector;
 use BlitzPHP\Utilities\Iterable\Arr;
 use BlitzPHP\Utilities\Iterable\Collection;
 use BlitzPHP\Utilities\String\Text;
@@ -161,33 +162,20 @@ class Zygot implements JsonSerializable
     }
 
     private function getRoutes(): array
-    {
-        $collection = Services::routes()->loadRoutes();
-        $methods    = [
-            'get',
-            'head',
-            'post',
-            'patch',
-            'put',
-            'delete',
-            'options',
-            'trace',
-            'connect',
-            'cli',
-        ];
-        $routes = [];
+    {		
+		$routes                = [];
+		$collection            = Services::routes()->loadRoutes();
+		$definedRouteCollector = new DefinedRouteCollector($collection);
 
-        foreach ($methods as $method) {
-            foreach ($collection->getRoutes($method, true) as $route => $handler) {
-                $options = $collection->getRoutesOptions($route);
-                $name    = (is_array($handler) && array_key_exists('name', $handler)) ? $handler['name'] : ($options['as'] ?? $route);
-
+		foreach ($definedRouteCollector->collect() as $route) {
+            // filtre pour les chaînes, car les rappels ne sont pas affichable
+            if ($route['handler'] !== '(Closure)') {
                 $routes[] = [
-                    'methods'    => strtoupper($method),
-                    'name'       => $name,
-                    'domain'     => $options['domain'] ?? '',
-                    'uri'        => $route,
-                    'isFallback' => false,
+					'methods'    => strtoupper($route['method']),
+					'name'       => $route['name'],
+					'domain'     => $options['domain'] ?? '',
+					'uri'        => $route['route'],
+					'isFallback' => false,
                 ];
             }
         }
