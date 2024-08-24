@@ -17,9 +17,23 @@ class Decorator implements ViewDecoratorInterface
 {
     public static function decorate(string $html): string
     {
-		$zygot = zygot();
-		$html  = str_replace('</head>', "\n\t$zygot\n</head>", $html);
+		if (! static::isExcludeRoute()) {
+			$zygot = zygot();
+			$html  = str_replace('</head>', "\n\t$zygot\n</head>", $html);
+		}
 
         return $html;
     }
+
+	private static function isExcludeRoute(): bool 
+	{
+		$routes = config('zygot.except', '');
+		if (is_string($routes)) {
+			$routes = explode(',', $routes);
+		}
+
+		$routes = array_map(static fn(string $route) => ltrim(rtrim($route)), $routes);
+		
+        return in_array(uri_string(), $routes, true);
+	}
 }
