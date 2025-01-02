@@ -37,6 +37,7 @@
   	  	"watch": "npm run build watch",
   	  	"build:npm": "microbundle --name route --format modern,es,umd --no-sourcemap",
   	  	"build:npm:vue": "microbundle --entry src/js/vue.js --output dist/vue.js --name ZygotVue --format modern,es,umd --no-sourcemap",
+  	  	"build:prod": "npm run build && npm run build:vue",
   	  	"test": "jest --verbose",
   	  	"prepublishOnly": "npm run build:npm && npm run build:npm:vue"
   	},
