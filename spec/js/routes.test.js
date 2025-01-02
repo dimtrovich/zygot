@@ -483,7 +483,7 @@ describe('route()', () => {
 		
 		same(route('regex.hash', 'abc'), 'https://zygot.dev/regex/abc');
 		same(route('regex.slug', 'article-123'), 'https://zygot.dev/regex/article-123');
-		//same(route('regex.many', ['article', 123, 'abc']), 'https://zygot.dev/regex/article/123/abc');
+		same(route('regex.many', ['article', 123, 'abc']), 'https://zygot.dev/regex/article/123/abc');
     });
 });
 

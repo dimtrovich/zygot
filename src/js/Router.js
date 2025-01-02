@@ -179,7 +179,7 @@ export default class Router {
 			from += '?' + http_build_query(params)
 		}
 
-		matches = from.match(new RegExp(/\([^)]+\)/));
+		matches = from.match(new RegExp(/\([^)]+\)/, 'g'));
     
         if (matches) {
 			// Construisez notre chaîne résultante, en insérant les $params aux endroits appropriés.
