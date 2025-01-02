@@ -186,7 +186,7 @@ export default class Router {
 			matches.forEach((pattern, index) => {
 				const param = String(params[index]);
 				if (! param.match(new RegExp(`^${pattern}$`, 'g'))) {
-					throw new Error(`Zygot error: Invalid parameter type: '${param}.`)
+					throw new Error(`Zygot error: Invalid parameter type: '${param}'.`)
 				}
 
 				// Assurez-vous que le paramètre que nous insérons correspond au type de paramètre attendu.

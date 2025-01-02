@@ -479,7 +479,7 @@ describe('route()', () => {
         
 		same(route('regex.alpha', ['abc']), 'https://zygot.dev/regex/abc');
 		same(route('regex.alpha', 'abc'), 'https://zygot.dev/regex/abc');
-		// throws(() => route('regex.alpha', '123'), /Zygot error: Invalid parameter type: '123'\./);
+		expect(() => route('regex.alpha', 123)).toThrow('Zygot error: Invalid parameter type: \'123\'');
 		
 		same(route('regex.hash', 'abc'), 'https://zygot.dev/regex/abc');
 		same(route('regex.slug', 'article-123'), 'https://zygot.dev/regex/article-123');
