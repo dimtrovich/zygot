@@ -27,13 +27,16 @@ class Decorator implements ViewDecoratorInterface
 
 	private static function isExcludeRoute(): bool 
 	{
-		$routes = config('zygot.except', '');
-		if (is_string($routes)) {
+		if (is_string($routes = config('zygot.except', []))) {
 			$routes = explode(',', $routes);
 		}
 
-		$routes = array_map(static fn(string $route) => ltrim(rtrim($route)), $routes);
-		
-        return in_array(uri_string(), $routes, true);
+		foreach (array_map('trim', $routes) as $route) {
+			if (url_is($route)) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 }
